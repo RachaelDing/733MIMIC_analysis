@@ -23,21 +23,24 @@ event_schema = types.StructType([
 ])
 
 df = spark.read.csv("CHARTEVENTS.csv.gz", schema = event_schema)
-#head_a = df.head(5)
-#a = df[df.itemid == 224329]
-#head_a = a.head(1)
-#for h in head_a:
-#    print(h)
 
-df = df.where((df.itemid==723) | (df.itemid==454)|(df.itemid==184) | (df.itemid==223900)
-             |(df.itemid==223901) | (df.itemid==220739)
-             |(df.itemid==51) | (df.itemid==442)|(df.itemid==455) | (df.itemid==6701)
-             |(df.itemid==220179) | (df.itemid==220050)
-             |(df.itemid==221) | (df.itemid==220045)
-             |(df.itemid==678) | (df.itemid==223761)|(df.itemid==676) | (df.itemid==223762)
-             |(df.itemid==223835) | (df.itemid==3420)|(df.itemid==3422) | (df.itemid==190))
-#df = df.where(df.itemid==723)
-#print(df.count())
-df.write.format("org.apache.spark.sql.cassandra").options(table="chartevent", keyspace='mimic').save()
+ce_itemids = [723, 454, 184, 223900, 223901, 220739,
+           51, 442, 455, 6701, 220179, 220050,
+           211, 220045, 
+           678, 223761, 676, 223762,
+           223835, 3420, 3422, 190]
+for itemid in ce_itemids:
+    df = df.where(df.itemid==itemid)
+    df.write.format("org.apache.spark.sql.cassandra").options(table=str(itemid), keyspace='mimic').save()
+    print("DONE WITH ITEM "+str(itemid)+" IN CHARTEVENTS")
 
-print("DONE")
+le_itemids = [50821, 50816,
+              51006,
+              51300,51301,
+              50882, 
+              950824, 50983,
+              50822, 50971,
+              50885]
+
+oe_itemids = [40055, 43175, 40069, 40094, 40715, 40473, 40085, 40057, 40056, 40405, 40428, 40086, 40096, 
+              40651, 226559, 226560, 226561, 226584, 226563, 226564, 226565, 226567, 226557, 226558, 227488, 227489]
