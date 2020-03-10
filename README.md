@@ -12,7 +12,7 @@ Create table admissions (
   PRIMARY KEY (hadm_id)
 );
 
-Create table itemtemp (
+Create table temp51006 (
   row_id INT,
   subject_id INT,
   hadm_id INT,
@@ -22,7 +22,7 @@ Create table itemtemp (
   PRIMARY KEY (row_id)
 );
 
-Create table item50821 (
+Create table item51006 (
   subject_id INT,
   hadm_id INT,
   charttime TIMESTAMP,

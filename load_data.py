@@ -52,15 +52,15 @@ def load_labelitems(item_n):
     print("DONE WITH LABELITEMS.")
 
 
-def check_valueuom(item_n):
+def check_valueuom(item_n, uom):
     df = spark.read.format("org.apache.spark.sql.cassandra").options(table='temp'+str(item_n), keyspace='mimic').load()
     total_n = df.count()
     null_n = df.filter(df.valueuom.isNull()).count()
-    majority_n = df[df.valueuom == "%"].count()
+    majority_n = df[df.valueuom == uom].count()
     print("Number of rows: "+str(total_n))
     print("Number of rows whose valueuom is null: "+str(null_n))
-    print("Number of rows whose valueuom is %: "+str(majority_n))
-    print("Number of rows whose valueuom is not null and not %: "+str(total_n - null_n - majority_n))
+    print("Number of rows whose valueuom is "+uom+": "+str(majority_n))
+    print("Number of rows whose valueuom is not null and not "+uom+": "+str(total_n - null_n - majority_n))
 
 
 def save_first_record(item_n):
@@ -108,9 +108,10 @@ def load_chartevents():
 if __name__== "__main__":
   #load_patients()
   #load_admissions()
-  item_n = 50816
+  item_n = 51006
+  uom = "mg/dL"
   #load_labelitems(item_n)
-  #check_valueuom(item_n)
+  #check_valueuom(item_n, uom)
   save_first_record(item_n)
 
 """
