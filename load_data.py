@@ -11,7 +11,8 @@ def load_patients():
     df = df.select("SUBJECT_ID","DOB")
     df = df.withColumnRenamed("SUBJECT_ID", "subject_id")
     df = df.withColumnRenamed("DOB", "dob")
-    df.write.format("org.apache.spark.sql.cassandra").options(table='patients', keyspace='mimic').save()
+    df
+
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     print("DONE WITH PATIENTS.")
 
@@ -90,10 +91,38 @@ def load_chartevents():
         df.write.format("org.apache.spark.sql.cassandra").options(table=str(itemid), keyspace='mimic').save()
         print("DONE WITH ITEM "+str(itemid)+" IN CHARTEVENTS")
 
+def find_first_and_save(item_n):
+    df = spark.read.format("org.apache.spark.sql.cassandra").options(table='itemtemp', keyspace='mimic').load()
+    df = df.filter(df.hadm_id.isNotNull())
+    df = df.filter(df.subject_id.isNotNull())
+    df = df.filter(df.valuenum.isNotNull())
+    df = df.filter(df.valueuom.isNotNull())
+    #df.show()
+    #check if it gives ealierest timestamp
+    """
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    df = df.filter(df.valueuom == "mm Hg")
+    df1= df.filter(df.hadm_id ==  "107505")
+    df1.show()
+    print(df1.count())
+    df = df.groupby(["hadm_id","subject_id"]).agg(F.min(df["charttime"]))
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    df2= df.filter(df.hadm_id ==  "107505")
+    df2.show()
+    print(df2.count())
+    """
+    df_minct = df.groupby(["hadm_id","subject_id"]).agg(F.min(df["charttime"]))
+    df_minct = df_minct.withColumnRenamed("min(charttime)", "charttime")
+    df_minct.show()
+    df_result = df_minct.join(df, ["hadm_id","subject_id","charttime"]).select(["hadm_id","subject_id","charttime","valuenum"])
+    df_result.show()
+    df_result.write.format("org.apache.spark.sql.cassandra").options(table="item"+str(item_n), keyspace='mimic').save()
+
 if __name__== "__main__":
   #load_patients()
   #load_admissions()
-  load_labelitems()
+  #load_labelitems()
+  find_first_and_save(50821)
 """
 le_itemids = [50821, 50816,
               51006,

@@ -22,10 +22,11 @@ Create table itemtemp (
   PRIMARY KEY (row_id)
 );
 
-Create table itemX (
+Create table item50821 (
   subject_id INT,
   hadm_id INT,
-  valueenum DOUBLEE,
+  charttime TIMESTAMP,
+  valuenum DOUBLE,
   PRIMARY KEY (hadm_id, subject_id)
 );
 
