@@ -29,7 +29,7 @@ def load_admissions():
     print("DONE WITH ADMISSIONS.")
 
 
-def load_labelitems(item_n):
+def load_labitems(item_n):
     event_schema = types.StructType([
         types.StructField('row_id', types.IntegerType()),
         types.StructField('subject_id', types.IntegerType()),
@@ -47,9 +47,38 @@ def load_labelitems(item_n):
     df = df.select('row_id','hadm_id','subject_id','charttime', 'valuenum','valueuom')
     df = df.filter(df.hadm_id.isNotNull() & df.subject_id.isNotNull() & df.valuenum.isNotNull())
     print(df.schema)
+    df.show()
     df.write.format("org.apache.spark.sql.cassandra").options(table='temp'+str(item_n), keyspace='mimic').save()
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     print("DONE WITH LABELITEMS.")
+
+def load_outputitems(item_n1, item_n2):
+    event_schema = types.StructType([
+        types.StructField('row_id', types.IntegerType()),
+        types.StructField('subject_id', types.IntegerType()),
+        types.StructField('hadm_id', types.IntegerType()),
+        types.StructField('icustay_id', types.IntegerType()),
+        types.StructField('charttime', types.TimestampType()),
+        types.StructField('itemid', types.IntegerType()),
+        types.StructField('value', types.DoubleType()),
+        types.StructField('valueuom', types.StringType()),
+        types.StructField('storetime', types.TimestampType()),
+        types.StructField('cgid', types.LongType()),
+        types.StructField('stopped', types.StringType()),
+        types.StructField('newbottle', types.IntegerType()),
+        types.StructField('iserror', types.ShortType()),
+    ])
+
+    df = spark.read.csv("OUTPUTEVENTS.csv.gz", schema = event_schema)
+    df = df[(df.itemid == item_n1) | (df.itemid == item_n2)]
+    df = df.select('row_id','hadm_id','subject_id','charttime', 'value','valueuom')
+    df = df.withColumnRenamed("value", "valuenum")
+    df = df.filter(df.hadm_id.isNotNull() & df.subject_id.isNotNull() & df.valuenum.isNotNull())
+    print(df.schema)
+    df.show()
+    df.write.format("org.apache.spark.sql.cassandra").options(table='temp'+str(item_n2), keyspace='mimic').save()
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print("DONE WITH OUTPUTLITEMS.")
 
 
 def check_valueuom(item_n, uom):
@@ -57,6 +86,7 @@ def check_valueuom(item_n, uom):
     total_n = df.count()
     null_n = df.filter(df.valueuom.isNull()).count()
     majority_n = df[df.valueuom == uom].count()
+    others = df[df.valueuom != uom].show()
     print("Number of rows: "+str(total_n))
     print("Number of rows whose valueuom is null: "+str(null_n))
     print("Number of rows whose valueuom is "+uom+": "+str(majority_n))
@@ -65,6 +95,8 @@ def check_valueuom(item_n, uom):
 
 def save_first_record(item_n):
     df = spark.read.format("org.apache.spark.sql.cassandra").options(table='temp'+str(item_n), keyspace='mimic').load()
+    #df = df[(df.valueuom == uom) | (df.valueuom.isNull())]
+    #print(df.count())
     df_minct = df.groupby(["hadm_id","subject_id"]).agg(F.min(df["charttime"]))
     df_minct = df_minct.withColumnRenamed("min(charttime)", "charttime")
     df_minct.show()
@@ -108,11 +140,14 @@ def load_chartevents():
 if __name__== "__main__":
   #load_patients()
   #load_admissions()
-  item_n = 51006
-  uom = "mg/dL"
-  #load_labelitems(item_n)
-  #check_valueuom(item_n, uom)
-  save_first_record(item_n)
+  #load_labitems(item_n)
+  item_n1=40428
+  item_n2=226567
+
+  uom = "ml"
+  #load_outputitems(item_n1, item_n2)
+  #check_valueuom(item_n2, uom)
+  save_first_record(item_n2)
 
 """
 le_itemids = [50821, 50816,
