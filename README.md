@@ -8,25 +8,29 @@ Create table admissions (
   subject_id INT,
   hadm_id INT,
   admittime TIMESTAMP,
+  dischtime TIMESTAMP,
   admission_type TEXT,
+  hospital_expire_flag BOOLEAN,
   PRIMARY KEY (hadm_id)
 );
 
-Create table temp51006 (
+Create table temp223835 (
   row_id INT,
   subject_id INT,
   hadm_id INT,
   charttime TIMESTAMP,
   valuenum DOUBLE,
   valueuom TEXT,
+  itemid INT,
   PRIMARY KEY (row_id)
 );
 
-Create table item51006 (
+Create table item223835 (
   subject_id INT,
   hadm_id INT,
   charttime TIMESTAMP,
   valuenum DOUBLE,
+  itemid INT,
   PRIMARY KEY (hadm_id, subject_id)
 );
 
