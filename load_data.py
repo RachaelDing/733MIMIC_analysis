@@ -162,32 +162,68 @@ def load_chartitems(item_n1, item_n2, item_n3, item_n4):
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     print("DONE WITH CHARTITEMS.")
 
+def concat_features():
+    admissions = spark.read.format("org.apache.spark.sql.cassandra").options(table='admissions', keyspace='mimic').load()
+    patients = spark.read.format("org.apache.spark.sql.cassandra").options(table='patients', keyspace='mimic').load()
+    df_result = admissions.join(patients, ["subject_id"])
+    #df_result = df_result.select("subject_id","hadm_id","dob","admittime","dischtizme","admission_type","hospital_expire_flag", (F.year("admittime")-F.year("dob")).alias("age"))
+    df_result = df_result.select("subject_id","hadm_id","admission_type","hospital_expire_flag", (F.year("admittime")-F.year("dob")).alias("age"))
+    df_result = df_result.filter(df_result.age > 15)
+    
+    df51006 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item51006', keyspace='mimic').load()
+    df_result = df_result.join(df51006, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item51006")
+    
+    df51301 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item51301', keyspace='mimic').load()
+    df_result = df_result.join(df51301, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item51301")
 
+    df50882 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item50882', keyspace='mimic').load()
+    df_result = df_result.join(df50882, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item50882")
+
+    df50983 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item50983', keyspace='mimic').load()
+    df_result = df_result.join(df50983, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item50983")
+
+    df50971 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item50971', keyspace='mimic').load()
+    df_result = df_result.join(df50971, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item50971")
+
+    df50821 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item50821', keyspace='mimic').load()
+    df_result = df_result.join(df50821, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item50821")
+
+    df226559 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item226559', keyspace='mimic').load()
+    df_result = df_result.join(df226559, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item226559")
+
+    df223900 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item223900', keyspace='mimic').load()
+    df_result = df_result.join(df223900, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item223900")
+
+    df223901 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item223901', keyspace='mimic').load()
+    df_result = df_result.join(df223901, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item223901")
+
+    df220739 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item220739', keyspace='mimic').load()
+    df_result = df_result.join(df220739, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item220739")
+
+    df220045 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item220045', keyspace='mimic').load()
+    df_result = df_result.join(df220045, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item220045")
+
+    df223761 = spark.read.format("org.apache.spark.sql.cassandra").options(table='item223761', keyspace='mimic').load()
+    df_result = df_result.join(df223761, ["subject_id","hadm_id"]).drop("charttime").withColumnRenamed("valuenum", "item223761")
+
+    df_result.write.format("org.apache.spark.sql.cassandra").options(table='motality_features_1', keyspace='mimic').save()  
+    #df_result.show()
+    #print(admissions.count())
+    #print(df_result.count())
+    print("FINISHED")
 
 if __name__== "__main__":
   #load_patients()
   #load_admissions()
   #load_labitems(item_n)
   #load_outputitems(item_n1, item_n2)
-  item_n1 = 51
-  item_n2 = 220050
-  item_n3 = 6701
-
+  item_n1 = 3420
+  item_n2 = 223835
+  item_n3 = 3422
+  item_n4 = 190
+  concat_features()
   #uom = "%"
   #load_chartitems(item_n1, item_n2, item_n3, item_n4)
   #check_valueuom(item_n2, uom)
   #show_diff(item_n2, item_n1, item_n3)
-  save_first_record(item_n2)
-
-"""
-le_itemids = [50821, 50816,
-              51006,
-              51300,51301,
-              50882, 
-              950824, 50983,
-              50822, 50971,
-              50885]
-
-oe_itemids = [40055, 43175, 40069, 40094, 40715, 40473, 40085, 40057, 40056, 40405, 40428, 40086, 40096, 
-              40651, 226559, 226560, 226561, 226584, 226563, 226564, 226565, 226567, 226557, 226558, 227488, 227489]
-"""
+  #save_first_record(item_n2)
