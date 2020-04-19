@@ -117,17 +117,18 @@ item_sbp[['VALUE']] = scaler.fit_transform(item_sbp[['VALUE']])
 item_spo2[['VALUE']] = scaler.fit_transform(item_spo2[['VALUE']])
 item_temp[['VALUE']] = scaler.fit_transform(item_temp[['VALUE']])
 item_tgcs[['VALUE']] = scaler.fit_transform(item_tgcs[['VALUE']])
-item_uo[['VALUE']] = scaler.fit_transform(item_uo[['VALUE']])
+#item_uo[['VALUE']] = scaler.fit_transform(item_uo[['VALUE']])
 
 
 # parameters used
 vitals_dict = {}
 np.random.seed(10)
-num_features = 10
+num_features = 9
 max_length = 2000 
+batch = 128
 gpu_num = 0
 ref_points = 192
-hid = 50
+hid = 100
 hours_looks_ahead =24
 num_fold = 5
 stds = []
@@ -266,7 +267,7 @@ stds.append(item_sbp['VALUE'].std())
 stds.append(item_spo2['VALUE'].std())
 stds.append(item_temp['VALUE'].std())
 stds.append(item_tgcs['VALUE'].std())
-stds.append(item_uo['VALUE'].std())
+#stds.append(item_uo['VALUE'].std())
 
 def y_trans(val):
     if val < int(target):
@@ -366,7 +367,7 @@ temp_sbp = select_ids(item_sbp, needed_ids)
 temp_spo2 = select_ids(item_spo2, needed_ids)
 temp_temp = select_ids(item_temp, needed_ids)
 temp_tgcs = select_ids(item_tgcs, needed_ids)
-temp_uo = select_ids(item_uo, needed_ids)
+#temp_uo = select_ids(item_uo, needed_ids)
 
 vitals_dict = {}
 for adm_id in needed_ids:
@@ -379,7 +380,7 @@ for adm_id in needed_ids:
     vitals_dict[adm_id].append(time_val_toLst(temp_spo2, adm_id))
     vitals_dict[adm_id].append(time_val_toLst(temp_temp, adm_id))
     vitals_dict[adm_id].append(time_val_toLst(temp_tgcs, adm_id))
-    vitals_dict[adm_id].append(time_val_toLst(temp_uo, adm_id))
+    #vitals_dict[adm_id].append(time_val_toLst(temp_uo, adm_id))
 
 vitals = [vitals_dict[x] for x in needed_ids] # hadm_id(los>=48h): all the vitals values
 if target == "3" or target == "7":
@@ -409,9 +410,9 @@ for train, test in kfold.split(np.zeros(len(y)), y):
         metrics={'main_output': 'accuracy'})
     history1 = model1.fit(
         {'input': X[train]}, {'main_output': y[train], 'aux_output': X[train]},
-        batch_size=128,
+        batch_size=batch,
         callbacks=callbacks_list,
-        nb_epoch=100,
+        nb_epoch=500,
         validation_split=0.20,
         verbose=2)
     y_pred = model1.predict(X[test], batch_size=batch)
