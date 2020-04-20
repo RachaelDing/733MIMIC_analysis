@@ -79,7 +79,7 @@ def assign_category(icd9_code):
     except:
         return 17
 
-def fill_missing(df, col_name, is_countinuous):
+def fill_missing_mean(df, col_name, is_countinuous):
     num_missing = df.count()['HADM_ID'] - df.count()[col_name]
     if num_missing == 0:
         return df
@@ -87,16 +87,33 @@ def fill_missing(df, col_name, is_countinuous):
         if is_countinuous:
             avg = df[col_name].mean()
             print(avg)
-            # df[col_name] = df[col_name].fillna(avg)
-            # vmin = df[col_name].min()
-            # q25 = df[col_name].quantile(0.25)
-            # df[col_name] = df[col_name].fillna(random.uniform(vmin, q25), limit=math.ceil(0.25*num_missing))
-            # med = df[col_name].quantile(0.5)
-            # df[col_name] = df[col_name].fillna(random.uniform(q25, med), limit=math.ceil(0.25*num_missing))
-            # q75 = df[col_name].quantile(0.75)
-            # df[col_name] = df[col_name].fillna(random.uniform(med, q75), limit=math.ceil(0.25*num_missing))
-            # vmax = df[col_name].max()
-            # df[col_name] = df[col_name].fillna(random.uniform(q75, vmax), limit=math.ceil(0.25*num_missing))
+            df[col_name] = df[col_name].fillna(avg)
+
+        else:
+            print(col_name)
+            values = df[df[col_name].notna()][col_name].unique()
+            rates = df[col_name].value_counts(normalize=True)
+            for value in values:
+                df[col_name] = df[col_name].fillna(value, limit=math.ceil(rates[value]*num_missing))
+    except:     
+        print('unable to process item ', col_name)
+    return df
+
+def fill_missing_quantile(df, col_name, is_countinuous):
+    num_missing = df.count()['HADM_ID'] - df.count()[col_name]
+    if num_missing == 0:
+        return df
+    try: 
+        if is_countinuous:
+            vmin = df[col_name].min()
+            q25 = df[col_name].quantile(0.25)
+            df[col_name] = df[col_name].fillna(random.uniform(vmin, q25), limit=math.ceil(0.25*num_missing))
+            med = df[col_name].quantile(0.5)
+            df[col_name] = df[col_name].fillna(random.uniform(q25, med), limit=math.ceil(0.25*num_missing))
+            q75 = df[col_name].quantile(0.75)
+            df[col_name] = df[col_name].fillna(random.uniform(med, q75), limit=math.ceil(0.25*num_missing))
+            vmax = df[col_name].max()
+            df[col_name] = df[col_name].fillna(random.uniform(q75, vmax), limit=math.ceil(0.25*num_missing))
 
         else:
             values = df[df[col_name].notna()][col_name].unique()
